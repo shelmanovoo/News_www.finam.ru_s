@@ -1,0 +1,150 @@
+{
+  "name": "News_www.finam.ru_s",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        112
+      ],
+      "id": "c31a9f06-1dbf-490d-83cd-2a42a5b4144b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.finam.ru/international/advanced/rsspoint/",
+        "options": {
+          "ignoreSSL": true
+        }
+      },
+      "id": "3889ecdb-409e-4869-9ac2-e5984bf780f6",
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO finam_rss (title, link, pub_date, content, content_snippet, iso_date)\nVALUES (\n  '{{ $json[\"title\"].replaceAll(\"'\", \"''\") }}',\n  '{{ $json[\"link\"].replaceAll(\"'\", \"''\") }}',\n  '{{ $json[\"pubDate\"] }}',\n  '{{ $json[\"content\"].replaceAll(\"'\", \"''\") }}',\n  '{{ $json[\"contentSnippet\"].replaceAll(\"'\", \"''\") }}',\n  '{{ $json[\"isoDate\"] }}'\n)\nON CONFLICT (link) DO NOTHING;",
+        "options": {}
+      },
+      "name": "Insert Unique News1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        112
+      ],
+      "id": "2414ac14-ff04-4018-afec-5382589318c4",
+      "credentials": {
+        "postgres": {
+          "id": "wujVNwu5jIKjF2n0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xFQmDLneomQjt5iZ",
+          "mode": "list",
+          "cachedResultName": "News_www.finam.ru_a"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "store_news"
+          ],
+          "schema": [
+            {
+              "id": "store_news",
+              "displayName": "store_news",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        112
+      ],
+      "id": "b68f9007-d74e-4985-bb8f-b11418e26242",
+      "name": "To_analis"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Insert Unique News1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Unique News1": {
+      "main": [
+        [
+          {
+            "node": "To_analis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf40162d-b346-4d17-a11e-0f324e8fdcf8",
+  "meta": {
+    "instanceId": "9ce263ea74ac56142ad0b445edd4996f0dce195bb2058608aecc86f0fd24906f"
+  },
+  "id": "LtXc6i0rhm8qKo43",
+  "tags": []
+}
